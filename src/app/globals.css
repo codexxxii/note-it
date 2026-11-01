@@ -1,0 +1,7 @@
+@import "tailwindcss";
+
+@layer base {
+  button {
+    @apply px-3 py-1.5 border cursor-pointer text-sm;
+  }
+}
