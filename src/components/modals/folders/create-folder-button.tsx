@@ -2,11 +2,12 @@
 
 import { Plus } from "lucide-react";
 import { Dispatch, SetStateAction, useState } from "react";
-import { folderSchema, FolderSchema } from "@/lib/shared-types";
+import { folderSchema, FolderSchema } from "@/lib/types";
 import { useForm, Controller, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createFolder } from "@/server/actions";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 export default function CreateFolderButton() {
   const [active, setActive] = useState(false);
@@ -14,7 +15,7 @@ export default function CreateFolderButton() {
   return (
     <>
       <button
-        className="p-0! w-7 h-7 grid place-items-center hover:bg-black hover:text-white"
+        className="p-0! w-7 h-7 grid place-items-center transition-all ease-in-out duration-500 hover:bg-[#29292b] hover:text-[#f9f9f9]"
         onClick={() => setActive(true)}
       >
         <Plus size={15} />
@@ -40,6 +41,7 @@ function CreateFolderModal({
     const newFolder = await createFolder(values);
 
     if (newFolder.success) {
+      toast.success("Folder created");
       form.reset();
       setActive(false);
     }
@@ -48,12 +50,12 @@ function CreateFolderModal({
   return (
     <div className="fixed inset-0 grid place-items-center">
       <div
-        className="bg-white/10 backdrop-blur-sm absolute inset-0"
+        className="bg-[#f9f9f9]/10 backdrop-blur-sm absolute inset-0"
         onClick={() => setActive(false)}
       />
       <FormProvider {...form}>
         <form
-          className="relative z-1000 w-full max-w-2xl border border-gray-200 p-5 bg-white space-y-5"
+          className="relative z-1000 w-full max-w-2xl border border-gray-200 p-5 bg-[#f9f9f9] space-y-5"
           onSubmit={form.handleSubmit(onSubmit)}
         >
           <div>
@@ -84,7 +86,10 @@ function CreateFolderModal({
             >
               Cancel
             </button>
-            <button className="bg-black border-black text-white" type="submit">
+            <button
+              className="bg-[#28282b] border-[#28282b] text-[#f9f9f9]"
+              type="submit"
+            >
               Save
             </button>
           </div>

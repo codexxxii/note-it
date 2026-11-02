@@ -1,7 +1,13 @@
 @import "tailwindcss";
 
 @layer base {
+  body {
+    @apply bg-[#f9f9f9] text-[#28282b];
+  }
   button {
     @apply px-3 py-1.5 border cursor-pointer text-sm;
+  }
+  ::selection {
+    @apply text-[#ff4200];
   }
 }

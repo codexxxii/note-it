@@ -25,7 +25,6 @@ export const folders = pgTable("folders", {
     .references(() => users.clerk_id, { onDelete: "cascade" })
     .notNull(),
   name: text("name").notNull(),
-  slug: text("slug").notNull(),
 });
 
 export const createFolderSchema = createInsertSchema(folders);
@@ -47,7 +46,6 @@ export const files = pgTable("files", {
     .references(() => folders.id, { onDelete: "cascade" })
     .notNull(),
   title: text("name").notNull(),
-  slug: text("slug").notNull(),
   content: text("content").notNull(),
 });
 

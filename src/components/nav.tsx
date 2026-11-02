@@ -14,6 +14,11 @@ export default function Nav() {
         <nav className="flex items-center gap-2.5">
           <Suspense>
             <Show when={"signed-in"}>
+              <Link href="/home">
+                <button className="border-transparent hover:underline">
+                  Home
+                </button>
+              </Link>
               <Link href="/files">
                 <button className="border-transparent hover:underline">
                   Files
@@ -35,7 +40,7 @@ export default function Nav() {
                 <button>Sign In</button>
               </SignInButton>
               <SignUpButton mode="modal" forceRedirectUrl={"/auth-callback"}>
-                <button className="border-black flex items-center gap-2 bg-black text-white">
+                <button className="border-[#28282b] flex items-center gap-2 bg-[#28282b] text-[#f9f9f9]">
                   Get Started <ArrowRight size={12} />
                 </button>
               </SignUpButton>

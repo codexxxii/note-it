@@ -4,10 +4,17 @@ import { db } from "./db";
 import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 import { and, eq } from "drizzle-orm";
-import { createFolderSchema, folders, users } from "./db/schema";
-import { FolderSchema, userSchema } from "@/lib/shared-types";
+import {
+  createFolderSchema,
+  folders,
+  users,
+  files,
+  createFileSchema,
+} from "./db/schema";
+import { FileSchema, FolderSchema, userSchema } from "@/lib/types";
 import { revalidatePath } from "next/cache";
 
+// Auth
 async function authCheck() {
   const { isAuthenticated, redirectToSignIn, userId } = await auth();
 
@@ -39,6 +46,7 @@ export async function authCallback() {
   }
 }
 
+// Folders
 export async function createFolder(folder: FolderSchema) {
   const userId = await authCheck();
 
@@ -51,11 +59,8 @@ export async function createFolder(folder: FolderSchema) {
       return { success: false };
     }
 
-    const slug = folder.name.replace(" ", "-").toLowerCase();
-
     const validSchema = createFolderSchema.parse({
       ...folder,
-      slug,
       user_id: userId,
     });
 
@@ -80,7 +85,6 @@ export async function getFolders() {
       columns: {
         id: true,
         name: true,
-        slug: true,
       },
     });
 
@@ -91,19 +95,105 @@ export async function getFolders() {
   }
 }
 
-export async function getFolder(slug: string) {
+export async function getFolder(folderId: string) {
   const userId = await authCheck();
 
   try {
     const data = await db.query.folders.findFirst({
-      where: and(eq(folders.user_id, userId), eq(folders.slug, slug)),
+      where: and(eq(folders.user_id, userId), eq(folders.id, folderId)),
       columns: {
         id: true,
         name: true,
       },
+      with: {
+        files: {
+          orderBy: (files, { desc }) => [desc(files.updated_at)],
+          columns: {
+            id: true,
+            created_at: true,
+            updated_at: true,
+            title: true,
+          },
+        },
+      },
     });
 
     return data;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
+export async function deleteFolder(folderId: string) {
+  const userId = await authCheck();
+
+  try {
+    const folderExists = await db.query.folders.findFirst({
+      where: and(eq(folders.id, folderId), eq(folders.user_id, userId)),
+    });
+
+    if (!folderExists) {
+      throw new Error("Folder does not exist");
+    }
+
+    await db.delete(folders).where(eq(folders.id, folderExists.id));
+
+    redirect("/folders");
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
+// Files
+export async function createFile(file: FileSchema) {
+  const userId = await authCheck();
+
+  try {
+    const nameIsTaken = await db.query.files.findFirst({
+      where: and(
+        eq(files.user_id, userId),
+        eq(files.title, file.title),
+        eq(files.folder_id, file.folder_id),
+      ),
+    });
+
+    if (nameIsTaken) {
+      return { success: false };
+    }
+
+    const validSchema = createFileSchema.parse({
+      ...file,
+      user_id: userId,
+    });
+
+    await db.insert(files).values(validSchema);
+
+    return { success: true };
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
+export async function deleteFile(fileId: string) {
+  const userId = await authCheck();
+
+  try {
+    const fileExists = await db.query.files.findFirst({
+      where: and(eq(files.id, fileId), eq(files.user_id, userId)),
+    });
+
+    if (!fileExists) {
+      throw new Error("File does not exist");
+    }
+
+    await db.delete(files).where(eq(files.id, fileExists.id));
+
+    revalidatePath("/folders/:id");
+
+    return { success: true };
   } catch (error) {
     console.log(error);
     throw error;
